@@ -1,0 +1,4 @@
+---
+- hosts: local
+  tasks:
+  - debug: msg="Host {{inventory_hostname}}"

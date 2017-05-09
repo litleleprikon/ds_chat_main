@@ -1,0 +1,57 @@
+version: '3'
+services:
+  front:
+    image: litleleprikon/front
+    ports:
+      - "80:80"
+    depends_on:
+     - back
+    deploy:
+      mode: replicated
+      replicas: 2
+      # service restart policy
+      restart_policy:
+        condition: on-failure
+        delay: 1s
+        max_attempts: 3
+        window: 120s
+      # service update configuration
+      update_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: continue
+        monitor: 60s
+        max_failure_ratio: 0.3
+      # placement constraint - in this case on 'worker' nodes only
+      placement:
+        constraints: [node.role == worker]
+
+  back:
+    image: litleleprikon/back
+    depends_on:
+     - mongo
+     - redis
+    deploy:
+      mode: replicated
+      replicas: 10
+      # service restart policy
+      restart_policy:
+        condition: on-failure
+        delay: 1s
+        max_attempts: 3
+        window: 120s
+      # service update configuration
+      update_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: continue
+        monitor: 60s
+        max_failure_ratio: 0.3
+      # placement constraint - in this case on 'worker' nodes only
+      placement:
+        constraints: [node.role == worker]
+
+  mongo:
+    image: mongo
+  redis:
+    image: redis

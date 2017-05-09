@@ -1,0 +1,6 @@
+[submodule "ds_chat_back"]
+	path = ds_chat_back
+	url = git@github.com:litleleprikon/ds_chat_back.git
+[submodule "ds_chat_front"]
+	path = ds_chat_front
+	url = git@github.com:litleleprikon/ds_chat_front.git
