@@ -1,0 +1,33 @@
+---
+- hosts: local
+  gather_facts: False
+
+  tasks:
+
+  - name: static analysis
+    shell: ./sonar.sh
+
+  - name: install front dependencies
+    shell: npm i
+    args:
+      chdir: ds_chat_front
+
+  - name: test front
+    shell: npm run test-ci
+    args:
+      chdir: ds_chat_front
+
+  - name: build front
+    shell: npm run build
+    args:
+      chdir: ds_chat_front
+
+  - name: remove front dependencies
+    shell: rm -rf node_modules 
+    args:
+      chdir: ds_chat_front
+
+  - name: install back dependencies
+    shell: npm i
+    args:
+      chdir: ds_chat_back

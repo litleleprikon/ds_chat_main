@@ -1,0 +1,45 @@
+---
+- hosts: local
+
+  tasks:
+
+  - debug: msg="Docker user - {{ lookup('env', 'DOCKER_USER') }}"
+
+  - name: Log into DockerHub
+    docker_login:
+      username: "{{ lookup('env', 'DOCKER_USER') }}"
+      password: "{{ lookup('env', 'DOCKER_PASS') }}"
+      email: "{{ lookup('env', 'DOCKER_EMAIL') }}"
+
+  - name: build front dockerfile
+    docker_image:
+      name: litleleprikon/ds-chat-front
+      push: yes
+      path: ./ds_chat_front
+
+  - name: build back dockerfile
+    docker_image:
+      name: litleleprikon/ds-chat-back
+      push: yes
+      path: ./ds_chat_back
+
+  - include: integration-tests.yml
+
+  - name: copy docker-compose.yml to manager
+    synchronize:
+      src: ./docker-compose.yml
+      dest: ~/docker-compose.yml
+    delegate_to: manager
+
+- hosts: manager
+
+  - name: pull docker front
+    docker_image:
+      name: litleleprikon/ds-chat-front
+
+  - name: pull docker back
+    docker_image:
+      name: litleleprikon/ds-chat-back
+
+  - name: run cluster
+    shell: docker deploy --compose-file docker-compose.yml

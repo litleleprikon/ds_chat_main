@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const dns = require('dns');
+const username = require("os").userInfo().username
 
 function resolveDomain(domain) {
     return new Promise((res, rej) => {
@@ -17,6 +18,7 @@ function main() {
     const baseDomain = process.env.CHAT_DOMAIN;
     const chatDomain = "chat." + baseDomain;
     const managerDomain = "manager." + chatDomain;
+    const testDomain = "test." + chatDomain;
 
     let result = {};
     var vars = {
@@ -25,18 +27,23 @@ function main() {
     }
     result.local = {
         hosts: ['localhost'],
-        vars: vars
+        vars: vars,
+        sudo_user: username
     }
 
     if (process.argv.indexOf("--list") > -1) {
         resolveDomain(managerDomain)
         .then((addresses) => {
             result.manager = {hosts: addresses, vars: vars}
-            return resolveDomain(chatDomain)
+            return resolveDomain(managerDomain)
         })
         .then((addresses) => {
             result.workers = {hosts: addresses, vars: vars};
             return resolveDomain(chatDomain);
+        })
+        .then((addresses) => {
+            result.test = {hosts: addresses, vars: vars};
+            return resolveDomain(testDomain);
         })
         .catch((err) => {
             console.error(err.message);

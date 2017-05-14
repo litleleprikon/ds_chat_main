@@ -1,8 +1,10 @@
 ---
 - hosts: local
+  become_user: litleleprikon
+  become: True
 
   vars:
-    - dropletname: chat
+    - dropletname: manager
   
   roles:
     - DrMegahertz.cloudflare
@@ -15,7 +17,7 @@
     user: >
       name={{ ansible_user_id }}
       generate_ssh_key=yes
-      ssh_key_file=.ssh/id_rsa
+      ssh_key_file="~/.ssh/chat_id_rsa"
 
   - name: ensure key exists at DigitalOcean
     digital_ocean: >
@@ -24,6 +26,8 @@
       name=my_ssh_key
       ssh_pub_key={{ lookup('file', '~/.ssh/chat_id_rsa.pub') }}
     register: my_ssh_key
+
+  - debug: msg="ssh {{my_ssh_key}}"
 
   - debug: msg="Droplet name {{dropletname}}"
 
@@ -35,6 +39,7 @@
       size_id=512mb
       region_id=sgp1
       image_id=coreos-stable
+      ipv6=no
       ssh_key_ids={{ my_ssh_key.ssh_key.id }}
     register: created_droplet
 
@@ -45,45 +50,29 @@
   - name: Add DNS record
     cloudflare_domain: >
         state=present
-        name=chat
+        name=manager.chat
         zone=litleleprikon.me
         type=A
         content={{ created_droplet.droplet.ip_address }}
 
   - name: Add host to groupname
-      add_host: hostname={{ created_droplet.droplet.ip_address }} groupname=new_instances
+    add_host:
+      hostname: "{{ created_droplet.droplet.ip_address }}"
+      ansible_ssh_private_key_file: ~/.ssh/chat_id_rsa
+      groupname: new_instances
 
 - hosts: new_instances
+
+  remote_user: core
   connection: ssh
-  sudo: True
+  become: True
+  become_user: core
   
   tasks:
   - name: New instance configuration
   - debug: msg="IP is {{ inventory_hostname }}"
 
   tasks:
-    - name: determine swarm status
+    - name: Initialize swarm cluster
       shell: >
-        docker info | egrep '^Swarm: ' | cut -d ' ' -f2
-      register: swarm_status
-
-    - name: create swarm_worker_operational group
-      add_host:
-        hostname: "{{ item }}"
-        groups: swarm_worker_operational
-      with_items: "{{ new_instances }}"
-      when: "'active' in swarm_status.stdout_lines"
-      run_once: true
-
-    - name: create swarm_worker_bootstrap group
-      add_host:
-        hostname: "{{ item }}"
-        groups: swarm_worker_bootstrap
-      with_items: "{{ play_hosts }}"
-      when: "'active' not in swarm_status.stdout_lines"
-      run_once: true
-
-
-
-
-
+        docker swarm init --advertise-addr="{{created_droplet.droplet.ip_address}}:2377"

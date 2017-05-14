@@ -41,6 +41,6 @@ echo -e "${CONSOLE_TEXT_COLOR_GREEN}Token is set to ${token_do}${CONSOLE_TEXT_CO
 export CHAT_DOMAIN=$domain
 export DO_API_TOKEN=$token_do
 export CLOUDFLARE_API_EMAIL=$email
-export CLOUDFLARE_API_TOKEN=token_cf
+export CLOUDFLARE_API_TOKEN=$token_cf
 
 echo -e "${CONSOLE_TEXT_COLOR_GREEN}All credentials are set${CONSOLE_TEXT_COLOR_RESET}"

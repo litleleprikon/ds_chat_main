@@ -1,0 +1,18 @@
+  - debug: msg="Integration tests"
+
+  - name: test that main page available
+    uri:
+      url: http://test.chat.litleleprikon.me/check/main
+
+  - name: test that express work and nginx see it
+    uri:
+      url: http://test.chat.litleleprikon.me/check/express
+
+  - name: test that express work and connection to mongo established
+    uri:
+      url: http://test.chat.litleleprikon.me/check/mongo
+
+  - name: test that express work and redis available
+    uri:
+      url: http://test.chat.litleleprikon.me/check/redis
+
